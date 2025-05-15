@@ -5,11 +5,12 @@ import QRGeneratorPage from './pages/QRGeneratorPage';
 import BarcodeGeneratorPage from './pages/BarcodeGeneratorPage';
 import HistoryPage from './pages/HistoryPage';
 import TopBar from './components/TopBar';
+import NavBar from './components/NavBar';
 
 function App() {
   return ( 
     <Router>
-      <TopBar />
+      <NavBar/>
       <main className="p-4">
         <Routes>
           <Route path="/" element={<Navigate to="/scan" />} />

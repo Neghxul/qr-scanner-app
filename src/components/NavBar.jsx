@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiCamera, FiFileText, FiArchive, FiList } from 'react-icons/fi';
 
-export default function TopBar() {
+export default function NavBar() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
