@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { FiZap, FiZapOff, FiCamera } from "react-icons/fi";
 
@@ -19,6 +19,7 @@ export default function App() {
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
 
   const scannerRef = useRef(null);
+  const modalContentRef = useRef(null);
 
   const handleScan = async (text) => {
     if (!text) return;
@@ -67,11 +68,11 @@ export default function App() {
         { deviceId: { exact: cam.id } },
         {
           fps: 10,
-          qrbox: 250,
+          qrbox: { width: 250, height: 250 },
           experimentalFeatures: { useBarCodeDetectorIfSupported: true }
         },
         (decodedText) => handleScan(decodedText),
-        (err) => {}
+        () => {}
       );
     } catch (err) {
       console.error("Error al iniciar escáner:", err);
@@ -117,6 +118,28 @@ export default function App() {
     }, 300);
   };
 
+  // Cerrar modal clic fuera
+  const handleClickOutside = (e) => {
+    if (
+      modalContentRef.current &&
+      !modalContentRef.current.contains(e.target)
+    ) {
+      stopScanner();
+    }
+  };
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
+
   return (
     <div className="min-h-screen bg-white p-4 flex flex-col items-center">
       <h1 className="text-xl font-bold mb-4 text-center">Escáner QR / Código de Barras</h1>
@@ -140,9 +163,12 @@ export default function App() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg w-[90%] max-w-sm relative flex flex-col items-center">
+          <div
+            ref={modalContentRef}
+            className="bg-white p-4 rounded-lg w-[90%] max-w-sm flex flex-col items-center relative"
+          >
             <h2 className="text-lg font-semibold mb-2 text-center">Escaneando...</h2>
-            <div id="reader" className="w-full h-60 rounded" />
+            <div id="reader" className="w-full h-48 rounded overflow-hidden" />
             <div className="flex justify-center gap-6 mt-4">
               <button
                 onClick={toggleTorch}
