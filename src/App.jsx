@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import TopBar from './components/TopBar';
 
 import ScannerPage from './pages/ScannerPage';
 import QRGeneratorPage from './pages/QRGeneratorPage';
 import BarcodeGeneratorPage from './pages/BarcodeGeneratorPage';
 import HistoryPage from './pages/HistoryPage';
+import TopBar from './components/TopBar';
 
 function App() {
   return ( 
