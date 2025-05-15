@@ -1,24 +1,62 @@
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { FiMenu, FiX, FiCamera, FiFileText, FiArchive, FiList } from 'react-icons/fi';
 
-export default function TopBar({ onSelect }) {
-  const [open, setOpen] = useState(false);
+export default function TopBar() {
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navItems = [
+    { path: "/scan", label: "Escanear", icon: <FiCamera /> },
+    { path: "/qr", label: "Generar QR", icon: <FiFileText /> },
+    { path: "/barcode", label: "Generar Barras", icon: <FiArchive /> },
+    { path: "/history", label: "Historial", icon: <FiList /> },
+  ];
+
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="bg-indigo-600 text-white px-4 py-3 flex items-center justify-between shadow-md">
-      <div className="flex items-center gap-3">
-        <button onClick={() => setOpen(!open)} className="md:hidden">
-          {open ? <X size={24} /> : <Menu size={24} />}
+    <header className="bg-gray-900 text-white px-4 py-3 shadow-md relative z-50 transition-all duration-300">
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-bold tracking-wide">QR Scanner App</h1>
+
+        <button
+          className="md:hidden"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
-        <h1 className="text-xl font-bold">QR Scanner App</h1>
+
+        <nav className="hidden md:flex gap-6 text-sm">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-1 hover:text-blue-400 transition-colors ${
+                isActive(item.path) ? 'text-blue-500 font-semibold' : ''
+              }`}
+            >
+              {item.icon} {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
 
-      {open && (
-        <div className="absolute top-14 left-0 w-full bg-white text-black md:hidden z-50 shadow-md">
-          <nav className="flex flex-col">
-            <button onClick={() => { onSelect('scan'); setOpen(false); }} className="p-3 hover:bg-gray-200 text-left">📷 Escanear</button>
-            <button onClick={() => { onSelect('qr'); setOpen(false); }} className="p-3 hover:bg-gray-200 text-left">🔳 Generar QR</button>
-            <button onClick={() => { onSelect('barcode'); setOpen(false); }} className="p-3 hover:bg-gray-200 text-left">📦 Generar Código de Barras</button>
+      {menuOpen && (
+        <div className="absolute top-full left-0 w-full bg-gray-800 text-white md:hidden shadow-md transition-all duration-300 animate-fade-down">
+          <nav className="flex flex-col p-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-2 py-2 px-3 rounded hover:bg-gray-700 ${
+                  isActive(item.path) ? 'bg-gray-700 font-semibold' : ''
+                }`}
+              >
+                {item.icon} {item.label}
+              </Link>
+            ))}
           </nav>
         </div>
       )}

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
+import { toast } from 'react-hot-toast';
+
 
 function encodeData(text) {
   return btoa(text); // base64
@@ -43,7 +45,14 @@ export default function QRGenerator() {
     a.href = dataUrl;
     a.download = `qr_${inputs.clave}.png`;
     a.click();
+    toast.success("QR descargado correctamente");x
   };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Texto copiado al portapapeles");
+  };
+  
   
 
   return (
@@ -68,27 +77,24 @@ export default function QRGenerator() {
         />
         Codificar QR (Base64)
       </label>
-
-      {qrDataFinal && (
-        <div className="flex flex-col items-center">
-          <QRCode value={qrDataFinal} size={200} />
-          <p className="mt-4 text-xs break-all">{qrDataFinal}</p>
+      <div className="flex flex-col items-center">
+        <div id="qrCode" className="bg-white p-2">
+            <QRCode value={qrDataFinal} size={200} />
         </div>
-      )}
+        <p className="mt-4 text-xs break-all">{qrDataFinal}</p>
+        <button
+            onClick={downloadQRCode}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+         >Descargar QR
+         </button>
+         <button
+  onClick={() => copyToClipboard(barcodeValue)} // o qrDataFinal en QRGenerator
+  className="mt-2 px-4 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+>
+  Copiar al portapapeles
+</button>
 
-<div className="flex flex-col items-center">
-  <div id="qrCode" className="bg-white p-2">
-    <QRCode value={qrDataFinal} size={200} />
-  </div>
-  <p className="mt-4 text-xs break-all">{qrDataFinal}</p>
-  <button
-    onClick={downloadQRCode}
-    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-  >
-    Descargar QR
-  </button>
-</div>
-
+        </div>
     </div>
   );
 }

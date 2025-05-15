@@ -45,6 +45,7 @@ export default function BarcodeGenerator() {
       a.href = png;
       a.download = `barcode_${clave}_${anio}${pedimento}.png`;
       a.click();
+      toast.success("Código de barras descargado");
     };
 
     img.src = url;

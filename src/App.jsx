@@ -1,21 +1,25 @@
-import { useState } from 'react';
-import TopBar from './components/Topbar';
-import Scanner from './components/Scanner';
-import QRGenerator from './components/QRGenerator';
-import BarcodeGenerator from './components/BarcodeGenerator';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import TopBar from './components/TopBar';
+
+import ScannerPage from './pages/ScannerPage';
+import QRGeneratorPage from './pages/QRGeneratorPage';
+import BarcodeGeneratorPage from './pages/BarcodeGeneratorPage';
+import HistoryPage from './pages/HistoryPage';
 
 function App() {
-  const [option, setOption] = useState('scan');
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      <TopBar onSelect={setOption} />
+    <Router>
+      <TopBar />
       <main className="p-4">
-        {option === 'scan' && <Scanner />}
-        {option === 'qr' && <QRGenerator />}
-        {option === 'barcode' && <BarcodeGenerator />}
+        <Routes>
+          <Route path="/" element={<Navigate to="/scan" />} />
+          <Route path="/scan" element={<ScannerPage />} />
+          <Route path="/qr" element={<QRGeneratorPage />} />
+          <Route path="/barcode" element={<BarcodeGeneratorPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+        </Routes>
       </main>
-    </div>
+    </Router>
   );
 }
 

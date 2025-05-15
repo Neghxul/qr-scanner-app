@@ -3,6 +3,10 @@ import { Html5Qrcode } from "html5-qrcode";
 import { FiZap, FiZapOff, FiCamera } from "react-icons/fi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { toast } from 'react-hot-toast';
+
 
 export default function Scanner() {
   const [data, setData] = useState(initialData());
@@ -47,10 +51,14 @@ export default function Scanner() {
     const decodedText = isEncoded ? atob(text) : text;
   
     let newData = initialData();
+    let tipo = "";
   
     if (decodedText.includes("/")) {
+      // Formato QR
+      toast.success("Código QR escaneado correctamente" + (isEncoded ? " (codificado)" : ""));
       const [clave, pedimento, descripcion, linea, estante, posicion] =
         decodedText.split("/");
+  
       newData = {
         clave: clave?.toUpperCase(),
         pedimentoAno: pedimento?.slice(0, 2),
@@ -59,9 +67,12 @@ export default function Scanner() {
         linea: linea?.toUpperCase(),
         estante: estante?.toUpperCase(),
         posicion: posicion?.toUpperCase(),
-        codificado: isEncoded
+        codificado: isEncoded,
+        tipo: "QR"
       };
     } else if (decodedText.includes("-")) {
+      // Formato de código de barras
+      toast.success("Código de barras escaneado correctamente" + (isEncoded ? " (codificado)" : ""));
       const [clave, pedimento] = decodedText.split("-");
       newData = {
         clave: clave?.toUpperCase(),
@@ -71,14 +82,20 @@ export default function Scanner() {
         linea: "",
         estante: "",
         posicion: "",
-        codificado: isEncoded
+        codificado: isEncoded,
+        tipo: "Barra"
       };
+    } else {
+      // Si no cumple con ningún formato esperado
+      toast.error("Formato no reconocido");
+      return;
     }
   
     setData(newData);
     setHistory((prev) => [newData, ...prev]);
     await stopScanner();
   };
+  
   
   
 
@@ -165,6 +182,18 @@ export default function Scanner() {
   };
 
   useEffect(() => {
+    localStorage.setItem("scanHistory", JSON.stringify(history));
+  }, [history]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("scanHistory");
+    if (stored) {
+      setHistory(JSON.parse(stored));
+    }
+  }, []);
+  
+
+  useEffect(() => {
     if (isModalOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
@@ -192,17 +221,49 @@ export default function Scanner() {
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(blob, `historial_scans_${Date.now()}.xlsx`);
+    toast.success("Historial exportado a Excel");
   };
 
   const removeFromHistory = (index) => {
     setHistory((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const clearHistory = () => {
+    if (confirm("¿Estás seguro de que deseas borrar todo el historial?")) {
+      setHistory([]);
+      localStorage.removeItem("scanHistory");
+      toast.success("Historial eliminado");
+    }
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Historial de Escaneos", 14, 15);
+  
+    autoTable(doc, {
+      startY: 20,
+      head: [[
+        "Clave", "Año", "#Pedimento", "Descripción",
+        "Línea", "Estante", "Posición", "Tipo", "Codificado"
+      ]],
+      body: history.map(h => [
+        h.clave, h.pedimentoAno, h.pedimentoNum, h.descripcion,
+        h.linea, h.estante, h.posicion, h.tipo, h.codificado ? "Sí" : "No"
+      ]),
+      styles: { fontSize: 8 },
+    });
+  
+    doc.save(`historial_scans_${Date.now()}.pdf`);
+    toast.success("PDF generado correctamente");
+
+  };
+  
+
   return (
     <div className="min-h-screen bg-white p-4 flex flex-col items-center">
       <h1 className="text-xl font-bold mb-4 text-center">Escáner QR / Cód. Barras</h1>
 
-      <div className="grid grid-cols-1 gap-3 w-full max-w-md">
+      {/*{<div className="grid grid-cols-1 gap-3 w-full max-w-md">
         <LabelInput label="Clave" value={data.clave} />
         <LabelInput label="Año Pedimento" value={data.pedimentoAno} />
         <LabelInput label="No. Pedimento" value={data.pedimentoNum} />
@@ -210,22 +271,16 @@ export default function Scanner() {
         <LabelInput label="Línea" value={data.linea} />
         <LabelInput label="Estante" value={data.estante} />
         <LabelInput label="Posición" value={data.posicion} />
-      </div>
+      </div>*/}
 
       <button
         onClick={openModal}
-        className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors"
       >
         Escanear
       </button>
-      <button
-        onClick={exportToExcel}
-        className="mt-4 mb-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-      >
-        Exportar a Excel
-      </button>
-
       
+
 
       {/* Tabla Historial */}
       {history.length > 0 && (
@@ -241,6 +296,7 @@ export default function Scanner() {
                 <th className="border px-2">Línea</th>
                 <th className="border px-2">Estante</th>
                 <th className="border px-2">Posición</th>
+                <th className="border px-2">Tipo</th>
                 <th className="border px-2">Codificado</th>
                 <th className="border px-2">Eliminar</th>
               </tr>
@@ -255,6 +311,7 @@ export default function Scanner() {
                   <td className="border px-1">{h.linea}</td>
                   <td className="border px-1">{h.estante}</td>
                   <td className="border px-1">{h.posicion}</td>
+                  <td className="border px-1">{h.tipo}</td>
                   <td className="border px-1">
                     {h.codificado ? (
                       <span className="text-green-600 font-semibold">Sí</span>
@@ -277,6 +334,32 @@ export default function Scanner() {
           </table>
         </div>
       )}
+
+{history.length > 0 && (
+
+<div className="mt-4 flex flex-wrap justify-center gap-4 mb-4">
+      <button
+        onClick={exportToExcel}
+        className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors"
+      >
+        Exportar a Excel
+      </button>
+      <button
+  onClick={exportToPDF}
+  className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition-colors"
+>
+  Exportar a PDF
+</button>
+
+
+      
+      <button
+  onClick={clearHistory}
+  className="mb-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+>
+  Borrar todo el historial
+</button>
+      </div>)}
 
       {/* Modal */}
       {isModalOpen && (
