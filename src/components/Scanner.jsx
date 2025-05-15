@@ -92,7 +92,11 @@ export default function Scanner() {
     }
   
     setData(newData);
-    setHistory((prev) => [newData, ...prev]);
+    setHistory((prev) => {
+      const updated = [newData, ...prev];
+      localStorage.setItem("scanHistory", JSON.stringify(updated));
+      return updated;
+    });
     await stopScanner();
   };
   
@@ -257,6 +261,9 @@ export default function Scanner() {
     toast.success("PDF generado correctamente");
 
   };
+
+  
+  
   
 
   return (
