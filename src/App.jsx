@@ -212,10 +212,10 @@ export default function App() {
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div
             ref={modalContentRef}
-            className="bg-white p-4 rounded-lg w-[95%] h-[90vh] max-w-md flex flex-col items-center justify-between relative"
+            className="bg-white p-4 rounded-lg w-[95%] h-[75vh] max-w-md flex flex-col items-center justify-between relative"
           >
             <h2 className="text-lg font-semibold mb-2 text-center">Escaneando...</h2>
-            <div id="reader" className="w-full h-64 rounded overflow-hidden" />
+            <div id="reader" className="w-full h-75 rounded overflow-hidden" />
             <div className="flex justify-center gap-6 mt-4">
               <button
                 onClick={toggleTorch}
