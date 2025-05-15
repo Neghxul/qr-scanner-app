@@ -1,5 +1,4 @@
-// src/App.jsx
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 export default function App() {
@@ -14,9 +13,13 @@ export default function App() {
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [scanner, setScanner] = useState(null);
+  const [isTorchOn, setIsTorchOn] = useState(false);
+  const scannerRef = useRef(null);
+  const cameraIdRef = useRef(null);
 
-  const handleScan = (text) => {
+  const handleScan = async (text) => {
+    if (!text) return;
+
     let newData = {
       clave: "",
       pedimentoAno: "",
@@ -28,7 +31,7 @@ export default function App() {
     };
 
     if (text.includes("/")) {
-      const [clave, pedimento, linea, descripcion, estante, posicion] = text.split("/");
+      const [clave, pedimento, descripcion, linea, estante, posicion] = text.split("/");
       newData.clave = clave?.toUpperCase();
       newData.pedimentoAno = pedimento?.slice(0, 2);
       newData.pedimentoNum = pedimento?.slice(2);
@@ -44,36 +47,64 @@ export default function App() {
     }
 
     setData(newData);
-    stopScanner(); // Cierra el modal automáticamente
+    await stopScanner(); // Espera a que termine antes de cerrar modal
   };
 
   const startScanner = async () => {
-    const html5QrCode = new Html5Qrcode("reader");
-    setScanner(html5QrCode);
+    const scanner = new Html5Qrcode("reader");
+    scannerRef.current = scanner;
 
     try {
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          handleScan(decodedText);
-        },
-        (errorMessage) => {
-          // errores ignorados por ahora
-        }
-      );
-    } catch (error) {
-      console.error("Error iniciando el escáner", error);
+      const cameras = await Html5Qrcode.getCameras();
+      if (cameras && cameras.length) {
+        const camId = cameras[0].id;
+        cameraIdRef.current = camId;
+
+        await scanner.start(
+          { deviceId: { exact: camId } },
+          {
+            fps: 10,
+            qrbox: 250,
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true,
+            }
+          },
+          (decodedText) => {
+            handleScan(decodedText);
+          },
+          (err) => {
+            // Ignoramos errores de escaneo
+          }
+        );
+      }
+    } catch (err) {
+      console.error("Error al iniciar el escáner:", err);
     }
   };
 
-  const stopScanner = () => {
-    if (scanner) {
-      scanner.stop().then(() => {
-        scanner.clear();
-        setIsModalOpen(false);
-        setScanner(null);
+  const stopScanner = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (e) {
+        console.error("Error al detener escáner", e);
+      }
+    }
+    setIsModalOpen(false);
+    setIsTorchOn(false);
+  };
+
+  const toggleTorch = async () => {
+    if (!scannerRef.current || !cameraIdRef.current) return;
+
+    try {
+      await scannerRef.current.applyVideoConstraints({
+        advanced: [{ torch: !isTorchOn }]
       });
+      setIsTorchOn((prev) => !prev);
+    } catch (err) {
+      alert("Este dispositivo no soporta flash.");
     }
   };
 
@@ -81,7 +112,7 @@ export default function App() {
     setIsModalOpen(true);
     setTimeout(() => {
       startScanner();
-    }, 500); // espera para que el modal se monte
+    }, 300);
   };
 
   return (
@@ -105,17 +136,26 @@ export default function App() {
         Escanear
       </button>
 
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg w-[90%] max-w-sm relative">
+          <div className="bg-white p-4 rounded-lg w-[90%] max-w-sm relative flex flex-col items-center">
             <h2 className="text-lg font-semibold mb-2 text-center">Escaneando...</h2>
             <div id="reader" className="w-full h-60 rounded" />
-            <button
-              onClick={stopScanner}
-              className="absolute top-2 right-2 text-sm text-gray-500 hover:text-black"
-            >
-              ✕
-            </button>
+            <div className="flex gap-4 mt-3">
+              <button
+                onClick={toggleTorch}
+                className="px-4 py-1 bg-yellow-400 text-black rounded text-sm"
+              >
+                {isTorchOn ? "Apagar Flash" : "Encender Flash"}
+              </button>
+              <button
+                onClick={stopScanner}
+                className="px-4 py-1 bg-red-500 text-white rounded text-sm"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
