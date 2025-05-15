@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+import { FiZap, FiZapOff, FiCamera } from "react-icons/fi";
 
 export default function App() {
   const [data, setData] = useState({
@@ -14,8 +15,10 @@ export default function App() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false);
+  const [cameras, setCameras] = useState([]);
+  const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
+
   const scannerRef = useRef(null);
-  const cameraIdRef = useRef(null);
 
   const handleScan = async (text) => {
     if (!text) return;
@@ -47,7 +50,7 @@ export default function App() {
     }
 
     setData(newData);
-    await stopScanner(); // Espera a que termine antes de cerrar modal
+    await stopScanner();
   };
 
   const startScanner = async () => {
@@ -55,30 +58,23 @@ export default function App() {
     scannerRef.current = scanner;
 
     try {
-      const cameras = await Html5Qrcode.getCameras();
-      if (cameras && cameras.length) {
-        const camId = cameras[0].id;
-        cameraIdRef.current = camId;
+      const devices = await Html5Qrcode.getCameras();
+      if (devices.length === 0) throw new Error("No hay cámaras disponibles");
+      setCameras(devices);
 
-        await scanner.start(
-          { deviceId: { exact: camId } },
-          {
-            fps: 10,
-            qrbox: 250,
-            experimentalFeatures: {
-              useBarCodeDetectorIfSupported: true,
-            }
-          },
-          (decodedText) => {
-            handleScan(decodedText);
-          },
-          (err) => {
-            // Ignoramos errores de escaneo
-          }
-        );
-      }
+      const cam = devices[currentCameraIndex];
+      await scanner.start(
+        { deviceId: { exact: cam.id } },
+        {
+          fps: 10,
+          qrbox: 250,
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+        },
+        (decodedText) => handleScan(decodedText),
+        (err) => {}
+      );
     } catch (err) {
-      console.error("Error al iniciar el escáner:", err);
+      console.error("Error al iniciar escáner:", err);
     }
   };
 
@@ -86,26 +82,32 @@ export default function App() {
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
-        scannerRef.current.clear();
+        await scannerRef.current.clear();
       } catch (e) {
-        console.error("Error al detener escáner", e);
+        console.error("Error al detener escáner:", e);
       }
     }
-    setIsModalOpen(false);
     setIsTorchOn(false);
+    setIsModalOpen(false);
   };
 
   const toggleTorch = async () => {
-    if (!scannerRef.current || !cameraIdRef.current) return;
-
+    if (!scannerRef.current) return;
     try {
       await scannerRef.current.applyVideoConstraints({
         advanced: [{ torch: !isTorchOn }]
       });
       setIsTorchOn((prev) => !prev);
-    } catch (err) {
-      alert("Este dispositivo no soporta flash.");
+    } catch {
+      alert("Este dispositivo no soporta flash");
     }
+  };
+
+  const switchCamera = async () => {
+    const nextIndex = (currentCameraIndex + 1) % cameras.length;
+    setCurrentCameraIndex(nextIndex);
+    await stopScanner();
+    setTimeout(() => startScanner(), 500);
   };
 
   const openModal = () => {
@@ -136,22 +138,29 @@ export default function App() {
         Escanear
       </button>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg w-[90%] max-w-sm relative flex flex-col items-center">
             <h2 className="text-lg font-semibold mb-2 text-center">Escaneando...</h2>
             <div id="reader" className="w-full h-60 rounded" />
-            <div className="flex gap-4 mt-3">
+            <div className="flex justify-center gap-6 mt-4">
               <button
                 onClick={toggleTorch}
-                className="px-4 py-1 bg-yellow-400 text-black rounded text-sm"
+                className="text-yellow-500 text-2xl"
+                title={isTorchOn ? "Apagar Flash" : "Encender Flash"}
               >
-                {isTorchOn ? "Apagar Flash" : "Encender Flash"}
+                {isTorchOn ? <FiZap /> : <FiZapOff />}
+              </button>
+              <button
+                onClick={switchCamera}
+                className="text-blue-600 text-2xl"
+                title="Cambiar Cámara"
+              >
+                <FiCamera />
               </button>
               <button
                 onClick={stopScanner}
-                className="px-4 py-1 bg-red-500 text-white rounded text-sm"
+                className="text-red-500 text-sm bg-red-100 px-3 py-1 rounded"
               >
                 Cancelar
               </button>
