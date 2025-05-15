@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { FiZap, FiZapOff, FiCamera } from "react-icons/fi";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function Scanner() {
   const [data, setData] = useState(initialData());
@@ -173,6 +175,29 @@ export default function Scanner() {
     };
   }, [isModalOpen]);
 
+  const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(history.map((h) => ({
+      Clave: h.clave,
+      Año: h.pedimentoAno,
+      Pedimento: h.pedimentoNum,
+      Descripción: h.descripcion,
+      Línea: h.linea,
+      Estante: h.estante,
+      Posición: h.posicion,
+      Codificado: h.codificado ? 'Sí' : 'No',
+    })));
+  
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Historial");
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, `historial_scans_${Date.now()}.xlsx`);
+  };
+
+  const removeFromHistory = (index) => {
+    setHistory((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="min-h-screen bg-white p-4 flex flex-col items-center">
       <h1 className="text-xl font-bold mb-4 text-center">Escáner QR / Cód. Barras</h1>
@@ -193,6 +218,14 @@ export default function Scanner() {
       >
         Escanear
       </button>
+      <button
+        onClick={exportToExcel}
+        className="mt-4 mb-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+      >
+        Exportar a Excel
+      </button>
+
+      
 
       {/* Tabla Historial */}
       {history.length > 0 && (
@@ -209,6 +242,7 @@ export default function Scanner() {
                 <th className="border px-2">Estante</th>
                 <th className="border px-2">Posición</th>
                 <th className="border px-2">Codificado</th>
+                <th className="border px-2">Eliminar</th>
               </tr>
             </thead>
             <tbody>
@@ -228,6 +262,15 @@ export default function Scanner() {
                       <span className="text-gray-500">No</span>
                     )}
                   </td>
+                  <td className="border px-1">
+                    <button
+                      onClick={() => removeFromHistory(idx)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
+                      Borrar
+                    </button>
+                  </td>
+
                 </tr>
               ))}
             </tbody>

@@ -34,6 +34,18 @@ export default function QRGenerator() {
   const qrDataRaw = `${inputs.clave}/${inputs.anio}${inputs.pedimento}/${inputs.descripcion}/${inputs.linea}/${inputs.estante}/${inputs.posicion}`;
   const qrDataFinal = encoded ? encodeData(qrDataRaw) : qrDataRaw;
 
+  const downloadQRCode = () => {
+    const qrElement = document.querySelector("#qrCode canvas");
+    if (!qrElement) return;
+  
+    const dataUrl = qrElement.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `qr_${inputs.clave}.png`;
+    a.click();
+  };
+  
+
   return (
     <div className="max-w-xl mx-auto bg-white shadow-md p-6 rounded-lg">
       <h2 className="text-xl font-bold mb-4">🔳 Generador de Código QR</h2>
@@ -63,6 +75,20 @@ export default function QRGenerator() {
           <p className="mt-4 text-xs break-all">{qrDataFinal}</p>
         </div>
       )}
+
+<div className="flex flex-col items-center">
+  <div id="qrCode" className="bg-white p-2">
+    <QRCode value={qrDataFinal} size={200} />
+  </div>
+  <p className="mt-4 text-xs break-all">{qrDataFinal}</p>
+  <button
+    onClick={downloadQRCode}
+    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+  >
+    Descargar QR
+  </button>
+</div>
+
     </div>
   );
 }
