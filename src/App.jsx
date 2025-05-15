@@ -3,16 +3,8 @@ import { Html5Qrcode } from "html5-qrcode";
 import { FiZap, FiZapOff, FiCamera } from "react-icons/fi";
 
 export default function App() {
-  const [data, setData] = useState({
-    clave: "",
-    pedimentoAno: "",
-    pedimentoNum: "",
-    descripcion: "",
-    linea: "",
-    estante: "",
-    posicion: ""
-  });
-
+  const [data, setData] = useState(initialData());
+  const [history, setHistory] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [cameras, setCameras] = useState([]);
@@ -21,10 +13,8 @@ export default function App() {
   const scannerRef = useRef(null);
   const modalContentRef = useRef(null);
 
-  const handleScan = async (text) => {
-    if (!text) return;
-
-    let newData = {
+  function initialData() {
+    return {
       clave: "",
       pedimentoAno: "",
       pedimentoNum: "",
@@ -33,24 +23,40 @@ export default function App() {
       estante: "",
       posicion: ""
     };
+  }
+
+  const handleScan = async (text) => {
+    if (!text) return;
+
+    let newData = initialData();
 
     if (text.includes("/")) {
-      const [clave, pedimento, descripcion, linea, estante, posicion] = text.split("/");
-      newData.clave = clave?.toUpperCase();
-      newData.pedimentoAno = pedimento?.slice(0, 2);
-      newData.pedimentoNum = pedimento?.slice(2);
-      newData.descripcion = descripcion?.toUpperCase();
-      newData.linea = linea?.toUpperCase();
-      newData.estante = estante?.toUpperCase();
-      newData.posicion = posicion?.toUpperCase();
+      const [clave, pedimento, descripcion, linea, estante, posicion] =
+        text.split("/");
+      newData = {
+        clave: clave?.toUpperCase(),
+        pedimentoAno: pedimento?.slice(0, 2),
+        pedimentoNum: pedimento?.slice(2),
+        descripcion: descripcion?.toUpperCase(),
+        linea: linea?.toUpperCase(),
+        estante: estante?.toUpperCase(),
+        posicion: posicion?.toUpperCase()
+      };
     } else if (text.includes("-")) {
       const [clave, pedimento] = text.split("-");
-      newData.clave = clave?.toUpperCase();
-      newData.pedimentoAno = pedimento?.slice(0, 2);
-      newData.pedimentoNum = pedimento?.slice(2);
+      newData = {
+        clave: clave?.toUpperCase(),
+        pedimentoAno: pedimento?.slice(0, 2),
+        pedimentoNum: pedimento?.slice(2),
+        descripcion: "",
+        linea: "",
+        estante: "",
+        posicion: ""
+      };
     }
 
     setData(newData);
+    setHistory((prev) => [newData, ...prev]);
     await stopScanner();
   };
 
@@ -69,7 +75,11 @@ export default function App() {
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+          videoConstraints: {
+            facingMode: "environment",
+            advanced: isTorchOn ? [{ torch: true }] : []
+          }
         },
         (decodedText) => handleScan(decodedText),
         () => {}
@@ -93,22 +103,27 @@ export default function App() {
   };
 
   const toggleTorch = async () => {
-    if (!scannerRef.current) return;
     try {
-      await scannerRef.current.applyVideoConstraints({
+      const constraints = {
         advanced: [{ torch: !isTorchOn }]
-      });
+      };
+      await scannerRef.current.applyVideoConstraints(constraints);
       setIsTorchOn((prev) => !prev);
-    } catch {
-      alert("Este dispositivo no soporta flash");
+    } catch (e) {
+      alert("Este dispositivo o navegador no soporta el uso de flash.");
     }
   };
 
   const switchCamera = async () => {
     const nextIndex = (currentCameraIndex + 1) % cameras.length;
     setCurrentCameraIndex(nextIndex);
-    await stopScanner();
-    setTimeout(() => startScanner(), 500);
+
+    if (scannerRef.current) {
+      await scannerRef.current.stop();
+      await scannerRef.current.clear();
+    }
+
+    setTimeout(() => startScanner(), 300);
   };
 
   const openModal = () => {
@@ -118,7 +133,6 @@ export default function App() {
     }, 300);
   };
 
-  // Cerrar modal clic fuera
   const handleClickOutside = (e) => {
     if (
       modalContentRef.current &&
@@ -134,7 +148,6 @@ export default function App() {
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -142,7 +155,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white p-4 flex flex-col items-center">
-      <h1 className="text-xl font-bold mb-4 text-center">Escáner QR / Código de Barras</h1>
+      <h1 className="text-xl font-bold mb-4 text-center">Escáner QR / Cód. Barras</h1>
 
       <div className="grid grid-cols-1 gap-3 w-full max-w-md">
         <LabelInput label="Clave" value={data.clave} />
@@ -161,14 +174,48 @@ export default function App() {
         Escanear
       </button>
 
+      {/* Tabla Historial */}
+      {history.length > 0 && (
+        <div className="w-full mt-8 overflow-x-auto">
+          <h2 className="font-semibold mb-2 text-center">Historial de Escaneos</h2>
+          <table className="min-w-full text-sm border border-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border px-2">Clave</th>
+                <th className="border px-2">Año</th>
+                <th className="border px-2">#Pedimento</th>
+                <th className="border px-2">Descripción</th>
+                <th className="border px-2">Línea</th>
+                <th className="border px-2">Estante</th>
+                <th className="border px-2">Posición</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((h, idx) => (
+                <tr key={idx} className="text-center">
+                  <td className="border px-1">{h.clave}</td>
+                  <td className="border px-1">{h.pedimentoAno}</td>
+                  <td className="border px-1">{h.pedimentoNum}</td>
+                  <td className="border px-1">{h.descripcion}</td>
+                  <td className="border px-1">{h.linea}</td>
+                  <td className="border px-1">{h.estante}</td>
+                  <td className="border px-1">{h.posicion}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div
             ref={modalContentRef}
-            className="bg-white p-4 rounded-lg w-[90%] max-w-sm flex flex-col items-center relative"
+            className="bg-white p-4 rounded-lg w-[95%] h-[90vh] max-w-md flex flex-col items-center justify-between relative"
           >
             <h2 className="text-lg font-semibold mb-2 text-center">Escaneando...</h2>
-            <div id="reader" className="w-full h-48 rounded overflow-hidden" />
+            <div id="reader" className="w-full h-64 rounded overflow-hidden" />
             <div className="flex justify-center gap-6 mt-4">
               <button
                 onClick={toggleTorch}
