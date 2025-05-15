@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
 import { toast } from 'react-hot-toast';
+import { FiCopy } from "react-icons/fi";
 
 
 function encodeData(text) {
@@ -26,7 +27,7 @@ export default function QRGenerator() {
     posicion: '',
   });
 
-  const [encoded, setEncoded] = useState(false);
+  const [encoded, setEncoded] = useState(true);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,44 +58,72 @@ export default function QRGenerator() {
 
   return (
     <div className="max-w-xl mx-auto bg-white shadow-md p-6 rounded-lg">
-      <h2 className="text-xl font-bold mb-4">🔳 Generador de Código QR</h2>
+      <h2 className="text-xl font-bold mb-4">Generador de Código QR</h2>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <input name="clave" placeholder="Clave" onChange={handleChange} className="border p-2" />
-        <input name="anio" placeholder="Año" onChange={handleChange} className="border p-2" />
-        <input name="pedimento" placeholder="#Pedimento" onChange={handleChange} className="border p-2" />
-        <input name="descripcion" placeholder="Descripción" onChange={handleChange} className="border p-2" />
-        <input name="linea" placeholder="Línea" onChange={handleChange} className="border p-2" />
-        <input name="estante" placeholder="Estante" onChange={handleChange} className="border p-2" />
-        <input name="posicion" placeholder="Posición" onChange={handleChange} className="border p-2" />
+        <input name="clave" 
+          placeholder="Clave" 
+          onChange={handleChange} 
+          className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        />
+        <input name="anio" 
+        placeholder="Año" 
+        onChange={handleChange} 
+        className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+ />
+        <input name="pedimento" 
+        placeholder="#Pedimento" 
+        onChange={handleChange} 
+        className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+ />
+        <input name="descripcion" 
+        placeholder="Descripción" 
+        onChange={handleChange} 
+        className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+  />
+        <input name="linea" 
+        placeholder="Línea" 
+        onChange={handleChange} 
+        className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        />
+        <input name="estante" 
+        placeholder="Estante" 
+        onChange={handleChange} 
+        className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+ />
+        <input name="posicion" 
+        placeholder="Posición" 
+        onChange={handleChange} 
+        className="w-full p-2 rounded-md border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+ />
       </div>
 
       <label className="flex items-center gap-2 mb-4">
         <input
           type="checkbox"
           checked={encoded}
-          onChange={(e) => setEncoded(e.target.checked)}
+          onChange={(e) => setEncoded(e.target.checked)} 
         />
         Codificar QR (Base64)
       </label>
-      <div className="flex flex-col items-center">
-        <div id="qrCode" className="bg-white p-2">
-            <QRCode value={qrDataFinal} size={200} />
-        </div>
+      <div className='flex flex-col items-center'>
+      <div className="relative inline-block align-middle">
+  <QRCode value={qrDataFinal} size={200} />
+  <button
+    onClick={() => copyToClipboard(qrDataFinal)}
+    className="absolute bottom-1 right-1 bg-gray-700 bg-opacity-80 p-1 rounded-full hover:bg-gray-600 hover:cursor-pointer"
+    title="Copiar al portapapeles"
+  >
+    <FiCopy className="text-white" />
+  </button>
+</div>
         <p className="mt-4 text-xs break-all">{qrDataFinal}</p>
         <button
             onClick={downloadQRCode}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:cursor-pointer"
          >Descargar QR
          </button>
-         <button
-  onClick={() => copyToClipboard(barcodeValue)} // o qrDataFinal en QRGenerator
-  className="mt-2 px-4 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
->
-  Copiar al portapapeles
-</button>
-
-        </div>
+</div>
     </div>
   );
 }
