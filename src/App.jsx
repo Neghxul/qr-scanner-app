@@ -4,7 +4,6 @@ import ScannerPage from './pages/ScannerPage';
 import QRGeneratorPage from './pages/QRGeneratorPage';
 import BarcodeGeneratorPage from './pages/BarcodeGeneratorPage';
 import HistoryPage from './pages/HistoryPage';
-import TopBar from './components/TopBar';
 import NavBar from './components/NavBar';
 
 function App() {
