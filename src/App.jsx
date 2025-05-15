@@ -7,7 +7,7 @@ import BarcodeGeneratorPage from './pages/BarcodeGeneratorPage';
 import HistoryPage from './pages/HistoryPage';
 
 function App() {
-  return (
+  return ( 
     <Router>
       <TopBar />
       <main className="p-4">

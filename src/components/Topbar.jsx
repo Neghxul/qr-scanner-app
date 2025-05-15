@@ -9,7 +9,7 @@ export default function TopBar() {
   const navItems = [
     { path: "/scan", label: "Escanear", icon: <FiCamera /> },
     { path: "/qr", label: "Generar QR", icon: <FiFileText /> },
-    { path: "/barcode", label: "Generar Barras", icon: <FiArchive /> },
+    { path: "/barcode", label: "Generar Barras", icon: <FiArchive /> }, 
     { path: "/history", label: "Historial", icon: <FiList /> },
   ];
 
