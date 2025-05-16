@@ -267,7 +267,7 @@ export default function Scanner() {
   
 
   return (
-    <div className="min-h-screen bg-white p-4 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center max-w-xl mx-auto text-white shadow-md rounded-lg pt-6">
       <h1 className="text-xl font-bold mb-4 text-center">Escáner QR / Cód. Barras</h1>
 
       {/*{<div className="grid grid-cols-1 gap-3 w-full max-w-md">

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
 import { toast } from 'react-hot-toast';
-import { FiCopy, FiDownload } from "react-icons/fi";
+import { FiCopy, FiDownload, FiCheck } from "react-icons/fi";
 
 function encodeData(text) {
   return btoa(text);
@@ -27,6 +27,7 @@ export default function QRGenerator() {
   });
 
   const [encoded, setEncoded] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,10 +37,15 @@ export default function QRGenerator() {
   const qrDataRaw = `${inputs.clave}/${inputs.anio}${inputs.pedimento}/${inputs.descripcion}/${inputs.linea}/${inputs.estante}/${inputs.posicion}`;
   const qrDataFinal = encoded ? encodeData(qrDataRaw) : qrDataRaw;
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Texto copiado al portapapeles");
-  };
+const copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text);
+  setCopied(true);
+  toast.success("Texto copiado al portapapeles");
+
+  setTimeout(() => {
+    setCopied(false);
+  }, 2000);
+};
 
   const downloadQRCode = () => {
     const svg = document.querySelector(".qr-svg");
@@ -116,10 +122,12 @@ export default function QRGenerator() {
           <QRCode value={qrDataFinal} size={200} className="qr-svg bg-white p-1 rounded-md" />
           <button
             onClick={() => copyToClipboard(qrDataFinal)}
-            className="absolute bottom-1 right-1 bg-gray-700 bg-opacity-80 p-2 rounded-full hover:bg-gray-600 transition"
-            title="Copiar al portapapeles"
+            className={`absolute bottom-2 right-2 p-2 rounded-full transition ${
+              copied ? "bg-green-600" : "bg-gray-700 bg-opacity-80 hover:bg-gray-600"
+            }`}
+            title={copied ? "Copiado" : "Copiar al portapapeles"}
           >
-            <FiCopy className="text-white" />
+            {copied ? <FiCheck className="text-white" /> : <FiCopy className="text-white" />}
           </button>
           <button
             onClick={downloadQRCode}

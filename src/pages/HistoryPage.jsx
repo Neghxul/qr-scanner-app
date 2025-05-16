@@ -76,8 +76,8 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8 text-white bg-gray-900 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6 text-center">📋 Historial de Escaneos</h1>
+    <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center max-w-xl mx-auto text-white shadow-md rounded-lg pt-6">
+      <h1 className="text-2xl font-bold mb-6 text-center">Historial de Escaneos</h1>
 
       {history.length > 0 && (
         <div className="flex flex-wrap gap-4 mb-4 justify-center">

@@ -58,7 +58,7 @@ export default function BarcodeGenerator() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-gray-900 text-white shadow-md p-6 rounded-lg">
+    <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center max-w-xl mx-auto text-white shadow-md rounded-lg pt-6">
       <h2 className="text-xl font-bold mb-6 text-center">Generador de Código de Barras</h2>
 
       <div className="grid grid-cols-2 gap-4 mb-6">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMenu, FiX, FiCamera, FiFileText, FiArchive, FiList } from 'react-icons/fi';
+import { MdOutlineInventory } from "react-icons/md";
 
 export default function NavBar() {
   const location = useLocation();
@@ -10,7 +11,9 @@ export default function NavBar() {
     { path: "/scan", label: "Escanear", icon: <FiCamera /> },
     { path: "/qr", label: "Generar QR", icon: <FiFileText /> },
     { path: "/barcode", label: "Generar Barras", icon: <FiArchive /> }, 
+    { path: "/inventory", label: "Inventario", icon: <MdOutlineInventory size={16} /> },
     { path: "/history", label: "Historial", icon: <FiList /> },
+    
   ];
 
   const isActive = (path) => location.pathname === path;
