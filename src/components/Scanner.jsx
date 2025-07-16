@@ -65,7 +65,7 @@ export default function Scanner() {
         descripcion: descripcion?.toUpperCase(),
         linea: linea?.toUpperCase(),
         pedimentoAno: pedimento?.slice(0, 2),
-        pedimentoNum: pedimento,
+        pedimentoNum: pedimento?.slice(6),
         estante: estante?.toUpperCase(),
         posicion: posicion?.toUpperCase(),
         codificado: isEncoded,
@@ -118,7 +118,7 @@ export default function Scanner() {
         { deviceId: { exact: cam.id } },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 250, height: 300 },
           experimentalFeatures: { useBarCodeDetectorIfSupported: true },
           videoConstraints: {
             facingMode: "environment",
