@@ -19,7 +19,7 @@ export default function Scanner() {
   const scannerRef = useRef(null);
   const modalContentRef = useRef(null);
 
-  // CLAVE/DESCRIPCION/LINEA/PEDIMENTO/ESTANTE/POSICION
+  // CLAVE%DESCRIPCION%LINEA%PEDIMENTO%ESTANTE%POSICION
   function initialData() {
     return {
       clave: "",
@@ -54,8 +54,25 @@ export default function Scanner() {
     let newData = initialData();
     let tipo = "";
   
-    if (decodedText.includes("/")) {
+    if (decodedText.includes("%")) {
       // Formato QR
+      toast.success("Código QR escaneado correctamente" + (isEncoded ? " (codificado)" : ""));
+      const [clave, descripcion, linea, pedimento, estante, posicion] =
+        decodedText.split("%");
+  
+      newData = {
+        clave: clave?.toUpperCase(),
+        descripcion: descripcion?.toUpperCase(),
+        linea: linea?.toUpperCase(),
+        pedimentoAno: pedimento?.slice(0, 2),
+        pedimentoNum: pedimento?.slice(6),
+        estante: estante?.toUpperCase(),
+        posicion: posicion?.toUpperCase(),
+        codificado: isEncoded,
+        tipo: "QR"
+      };
+    } else if (decodedText.includes("-")) {
+      // Formato de código de barras
       toast.success("Código QR escaneado correctamente" + (isEncoded ? " (codificado)" : ""));
       const [clave, descripcion, linea, pedimento, estante, posicion] =
         decodedText.split("/");
