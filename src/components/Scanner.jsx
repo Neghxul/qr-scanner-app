@@ -71,7 +71,7 @@ export default function Scanner() {
         codificado: isEncoded,
         tipo: "QR"
       };
-    } else if (decodedText.includes("-")) {
+    } else if (decodedText.includes("/")) {
       // Formato de código de barras
       toast.success("Código QR escaneado correctamente" + (isEncoded ? " (codificado)" : ""));
       const [clave, descripcion, linea, pedimento, estante, posicion] =
