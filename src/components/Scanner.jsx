@@ -19,13 +19,14 @@ export default function Scanner() {
   const scannerRef = useRef(null);
   const modalContentRef = useRef(null);
 
+  // CLAVE/DESCRIPCION/LINEA/PEDIMENTO/ESTANTE/POSICION
   function initialData() {
     return {
       clave: "",
-      pedimentoAno: "",
-      pedimentoNum: "",
       descripcion: "",
       linea: "",
+      pedimentoAno: "",
+      pedimentoNum: "",
       estante: "",
       posicion: ""
     };
@@ -56,15 +57,15 @@ export default function Scanner() {
     if (decodedText.includes("/")) {
       // Formato QR
       toast.success("Código QR escaneado correctamente" + (isEncoded ? " (codificado)" : ""));
-      const [clave, pedimento, descripcion, linea, estante, posicion] =
+      const [clave, descripcion, linea, pedimento, estante, posicion] =
         decodedText.split("/");
   
       newData = {
         clave: clave?.toUpperCase(),
-        pedimentoAno: pedimento?.slice(0, 2),
-        pedimentoNum: pedimento?.slice(2),
         descripcion: descripcion?.toUpperCase(),
         linea: linea?.toUpperCase(),
+        pedimentoAno: pedimento?.slice(0, 2),
+        pedimentoNum: pedimento,
         estante: estante?.toUpperCase(),
         posicion: posicion?.toUpperCase(),
         codificado: isEncoded,
@@ -211,10 +212,10 @@ export default function Scanner() {
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(history.map((h) => ({
       Clave: h.clave,
-      Año: h.pedimentoAno,
-      Pedimento: h.pedimentoNum,
       Descripción: h.descripcion,
       Línea: h.linea,
+      Año: h.pedimentoAno,
+      Pedimento: h.pedimentoNum,
       Estante: h.estante,
       Posición: h.posicion,
       Codificado: h.codificado ? 'Sí' : 'No',
@@ -247,12 +248,12 @@ export default function Scanner() {
     autoTable(doc, {
       startY: 20,
       head: [[
-        "Clave", "Año", "#Pedimento", "Descripción",
-        "Línea", "Estante", "Posición", "Tipo", "Codificado"
+        "Clave",  "Descripción",
+        "Línea", "Año", "#Pedimento", "Estante", "Posición", "Tipo", "Codificado"
       ]],
       body: history.map(h => [
-        h.clave, h.pedimentoAno, h.pedimentoNum, h.descripcion,
-        h.linea, h.estante, h.posicion, h.tipo, h.codificado ? "Sí" : "No"
+        h.clave, h.descripcion,
+        h.linea, h.pedimentoAno, h.pedimentoNum, h.estante, h.posicion, h.tipo, h.codificado ? "Sí" : "No"
       ]),
       styles: { fontSize: 8 },
     });
@@ -297,10 +298,10 @@ export default function Scanner() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="border px-2">Clave</th>
-                <th className="border px-2">Año</th>
-                <th className="border px-2">#Pedimento</th>
                 <th className="border px-2">Descripción</th>
                 <th className="border px-2">Línea</th>
+                <th className="border px-2">Año</th>
+                <th className="border px-2">#Pedimento</th>
                 <th className="border px-2">Estante</th>
                 <th className="border px-2">Posición</th>
                 <th className="border px-2">Tipo</th>
@@ -312,10 +313,10 @@ export default function Scanner() {
               {history.map((h, idx) => (
                 <tr key={idx} className="text-center">
                   <td className="border px-1">{h.clave}</td>
-                  <td className="border px-1">{h.pedimentoAno}</td>
-                  <td className="border px-1">{h.pedimentoNum}</td>
                   <td className="border px-1">{h.descripcion}</td>
                   <td className="border px-1">{h.linea}</td>
+                  <td className="border px-1">{h.pedimentoAno}</td>
+                  <td className="border px-1">{h.pedimentoNum}</td>
                   <td className="border px-1">{h.estante}</td>
                   <td className="border px-1">{h.posicion}</td>
                   <td className="border px-1">{h.tipo}</td>
